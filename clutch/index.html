@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Chain of thought (CoT) improves driving when the car must act and degrades it when the car should keep going. Clutch selects when to use CoT, and counterfactual supervision trains the trajectory decoder to follow CoT.">
+  <meta name="keywords" content="driving VLA, chain of thought, selective reasoning, router, counterfactual supervision, Clutch, Alpamayo">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Reasoning by Consequence: Selective Chain-of-Thought for Driving VLAs">
+  <meta property="og:description"
+        content="Chain of thought improves driving when the car must act and degrades it when the car should keep going.">
+  <meta property="og:url" content="https://jacobyeung.org/clutch/">
+  <meta property="og:image" content="https://jacobyeung.org/clutch/static/images/social_card.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://jacobyeung.org/clutch/static/images/social_card.jpg">
+  <title>Reasoning by Consequence: Selective Chain-of-Thought for Driving VLAs</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" type="image/svg+xml" href="./static/images/favicon.svg">
+
+  <script src="./static/js/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" tabindex="0">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="../" aria-label="Jacob Yeung homepage" title="Jacob Yeung"><span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span></a>
+      <a class="navbar-item" href="#abstract">Abstract</a>
+      <a class="navbar-item" href="#finding">Finding</a>
+      <a class="navbar-item" href="#clutch">Clutch</a>
+      <a class="navbar-item" href="#counterfactual">Counterfactual supervision</a>
+      <a class="navbar-item" href="#together">Full method</a>
+      <a class="navbar-item" href="#BibTeX">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+
+<section class="hero" id="top">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Reasoning by Consequence:<br>Selective Chain-of-Thought for Driving VLAs</h1>
+                    <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://jacobyeung.org/">Jacob Yeung</a><sup>1,2</sup>,</span>
+            <span class="author-block"><a href="https://research.nvidia.com/labs/aspire/author/wenyuan-zhang/">Wenyuan Zhang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://nadinechang.com/">Nadine Chang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://sites.google.com/andrew.cmu.edu/tarrlab/people/michael-j-tarr">Michael J. Tarr</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://www.cs.cmu.edu/~deva/">Deva Ramanan</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://alvarezlopezjosem.github.io/">Jose M. Alvarez</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://wangpichao.github.io/">Pichao Wang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="https://research.nvidia.com/labs/aspire/author/ke-chen/">Ke Chen</a><sup>1</sup></span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>NVIDIA,</span>
+            <span class="author-block"><sup>2</sup>Carnegie Mellon University</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- Paper, arXiv and Code: add href and remove `disabled` once each is public. -->
+              <span class="link-block">
+                <button type="button" class="external-link button is-normal is-rounded is-dark" disabled title="Coming soon">
+                  <span class="icon"><i class="fas fa-file-pdf" aria-hidden="true"></i></span>
+                  <span>Paper</span>
+                </button>
+              </span>
+              <span class="link-block">
+                <button type="button" class="external-link button is-normal is-rounded is-dark" disabled title="Coming soon">
+                  <span class="icon"><i class="ai ai-arxiv" aria-hidden="true"></i></span>
+                  <span>arXiv</span>
+                </button>
+              </span>
+              <span class="link-block">
+                <a href="#drives" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-video" aria-hidden="true"></i></span>
+                  <span>Videos</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <button type="button" class="external-link button is-normal is-rounded is-dark" disabled title="Coming soon">
+                  <span class="icon"><i class="fab fa-github" aria-hidden="true"></i></span>
+                  <span>Code</span>
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <div class="teaser-crop">
+        <video id="teaser" class="inview" autoplay muted loop playsinline
+               poster="./static/images/poster_teaser_real_drives.jpg">
+          <source src="./static/videos/teaser_real_drives.mp4" type="video/mp4">
+        </video>
+      </div>
+      <h2 class="subtitle has-text-centered">
+        Chain of thought (CoT) improves driving when the car <b>must act</b>
+        and degrades it when the car should <b>keep going</b>.
+      </h2>
+      <p class="figure-caption has-text-centered">
+        Closed-loop HUGSIM drives of one driving VLA
+        <span class="without-cot">without CoT</span> and <span class="with-cot">with CoT</span>.
+        Top: when the car must act, the trajectory without CoT collides and the one with CoT passes.
+        Bottom: when the car should keep going, CoT states an unnecessary nudge and collides.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<section class="hero is-light is-small" id="drives">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered"><span class="clutch">Clutch</span>: the best of both</h2>
+      <p class="subtitle is-6 has-text-centered">
+        The first four drives are the four above, now with Clutch. Three more drives follow.
+        At every planning step, Clutch selects whether to execute the trajectory with CoT or the one without it.
+      </p>
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_01_stopped_car.jpg">
+            <source src="./static/videos/clutch_01_stopped_car.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-act">Must act</span>
+            A car is stopped in the lane. Without CoT, the car stays in its lane and collides.
+            With CoT, it changes lanes and passes. Clutch selects CoT to pass and completes the route.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_04_oncoming_car.jpg">
+            <source src="./static/videos/clutch_04_oncoming_car.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-act">Must act</span>
+            An oncoming car approaches on a narrow street. Without CoT, the car collides.
+            With CoT, it nudges right to make room. Clutch selects CoT to make room and clears the street.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_05_slow_truck.jpg">
+            <source src="./static/videos/clutch_05_slow_truck.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-keep">Keep going</span>
+            A truck drives ahead on a street lined with parked cars. CoT states &ldquo;Nudge left&rdquo; and collides
+            with the truck. Clutch selects the trajectory without CoT and stays in its lane behind the truck.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_06_slow_suv.jpg">
+            <source src="./static/videos/clutch_06_slow_suv.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-keep">Keep going</span>
+            An SUV drives ahead in the lane. With CoT, the car nudges left and collides.
+            Clutch selects the trajectory without CoT and stays clear.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_02_stopped_hatchback.jpg">
+            <source src="./static/videos/clutch_02_stopped_hatchback.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-act">Must act</span>
+            More drives: a hatchback is stopped in the lane. Without CoT, the car collides.
+            With CoT, it nudges left and passes. Clutch selects CoT to pass and finishes the drive.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_03_curve.jpg">
+            <source src="./static/videos/clutch_03_curve.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-act">Must act</span>
+            More drives: the road curves left. Without CoT, the car drifts right into parked cars.
+            With CoT, it follows the curve. Clutch selects CoT and follows the curve.</p>
+        </div>
+        <div class="item">
+          <video class="inview" controls muted loop playsinline preload="metadata"
+                 poster="./static/images/poster_clutch_07_slow_car.jpg">
+            <source src="./static/videos/clutch_07_slow_car.mp4" type="video/mp4">
+          </video>
+          <p class="item-caption"><span class="tag is-keep">Keep going</span>
+            More drives: a car drives ahead on a narrow street. CoT states &ldquo;Nudge left&rdquo; and &ldquo;Nudge right&rdquo;,
+            and the trajectory with CoT collides. Clutch selects the trajectory without CoT and stays in its lane.</p>
+        </div>
+      </div>
+      <p class="figure-caption has-text-centered">
+        Closed-loop HUGSIM drives of Alpamayo-CF (Alpamayo 1.5 finetuned with our counterfactual supervision).
+        Left to right: Never CoT, Always CoT, Clutch. Each panel shows the front camera and a bird's-eye view
+        (HD-Score: higher is better). Below Clutch, the bars show its CoT probability <i>p</i> and which trajectory
+        ran at each step (blue: with CoT, orange: without CoT).
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="abstract">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Embodied agents must decide when explicit reasoning improves an action, and then carry out the action
+            the reasoning states. Driving vision-language-action models (VLAs) write their reasoning as a chain of
+            thought (CoT) before they output a trajectory, yet always using CoT yields small gains over never using
+            it and can even degrade driving performance.
+          </p>
+          <p>
+            Across six VLAs, we find that CoT improves driving performance when the car must act, such as passing a
+            stopped car or taking a turn, and degrades it when the car should keep going in its lane. CoT degrades
+            driving performance for two reasons: the CoT can be wrong, or the trajectory can fail to
+            &lsquo;listen&rsquo; to a right CoT.
+          </p>
+          <p>
+            We train a router, <span class="clutch">Clutch</span>, that decides whether to execute the trajectory
+            generated with CoT or the one generated without it, so that the car does not act on a wrong CoT. The
+            trajectory fails to listen because its decoder learns to rely on the high-dimensional sensor input,
+            which predicts the driver's action in most scenes. <span class="cf">Counterfactual supervision</span>
+            removes this shortcut: we train the decoder on CoTs that state a different action, each paired with a
+            trajectory that carries it out.
+          </p>
+          <p>
+            Clutch outperforms always and never using CoT for every VLA in every evaluation and achieves over
+            7&times; the gain of a prior router. With counterfactual supervision, CoT improves driving performance
+            over 4&times; more when the car must act, and Clutch achieves its largest closed-loop gain. These
+            findings echo a lesson from human cognition: the value of reasoning depends on both its influence on
+            action and the judgment to use it selectively.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="finding">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">When does CoT improve driving?</h2>
+        <p class="section-takeaway">
+          CoT improves driving when the car must act, leaves most scenes unchanged, and degrades driving when the car should keep going.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            We evaluate six released driving VLAs in closed-loop HUGSIM and on three open-loop benchmarks: NAVSIM,
+            nuScenes, and PhysicalAI-AV. In every scene, we generate one trajectory with CoT and one without it.
+            What the car must do separates where CoT improves driving from where it degrades it.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="situation is-act">
+          <h3 class="title is-5">Must act</h3>
+          <p>The car must take a different action, such as taking a turn or passing a stopped car.
+            CoT can state the action the scene requires.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="situation is-keep">
+          <h3 class="title is-5">Keep going</h3>
+          <p>The car should continue in its lane. CoT often states an action that is not needed,
+            such as a pass or a lane change.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <video class="inview figure-video" controls muted loop playsinline preload="metadata"
+               poster="./static/images/poster_finding_must_act.jpg">
+          <source src="./static/videos/finding_must_act.mp4" type="video/mp4">
+        </video>
+        <video class="inview figure-video" controls muted loop playsinline preload="metadata"
+               poster="./static/images/poster_finding_keep_going.jpg">
+          <source src="./static/videos/finding_keep_going.mp4" type="video/mp4">
+        </video>
+        <p class="figure-caption">
+          <b>How CoT changes the trajectory in each situation.</b> Top (must act): the trajectory without CoT gets
+          stuck behind a barrier or a stopped car, while the trajectory with CoT goes around it. Bottom (keep going):
+          CoT states an unnecessary pass or lane change, and the trajectory with CoT collides.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <div class="content has-text-justified">
+          <p>
+            In closed-loop HUGSIM, CoT improves every VLA when the car must act: all six VLAs raise their HD-Score
+            and collide less. When the car should keep going, CoT lowers HD-Score for four of six VLAs and raises
+            collisions for five of six.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered chart-title">Driving score</h3>
+        <p class="has-text-centered chart-subtitle">Every VLA drives better with CoT when the car must act</p>
+        <img src="./static/images/finding_hdscore.png" alt="HD-Score change from CoT for each VLA: higher for every VLA when the car must act, lower for four of six when it should keep going.">
+      </div>
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered chart-title">Collisions</h3>
+        <p class="has-text-centered chart-subtitle">Fewer when the car must act, more when it should keep going</p>
+        <img src="./static/images/finding_collisions.png" alt="Collision rate change from CoT for each VLA: fewer collisions for every VLA when the car must act, more for five of six when it should keep going.">
+      </div>
+    </div>
+    <p class="figure-caption has-text-centered">Each bar: always using CoT minus never using CoT, in closed-loop HUGSIM.</p>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <div class="content has-text-justified">
+          <p>
+            Prior work expects CoT to help mainly in complex scenes, yet what the car must do matters at every
+            HUGSIM difficulty level. On open-loop benchmarks, CoT leaves most scenes unchanged and improves about
+            as many scenes as it degrades, so benchmark averages hide both effects.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered chart-title">Difficulty levels</h3>
+        <p class="has-text-centered chart-subtitle">The finding holds at every level</p>
+        <img src="./static/images/finding_difficulty.png" alt="HD-Score change from CoT at each HUGSIM difficulty level, averaged over the eight VLAs.">
+        <p class="figure-caption">
+          HD-Score change from never to always using CoT, averaged over all eight VLAs. At every difficulty level,
+          CoT improves HD-Score more when the car must act than when it should keep going.
+        </p>
+      </div>
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered chart-title">Per-scene open-loop effect</h3>
+        <p class="has-text-centered chart-subtitle">CoT improves about as many scenes as it degrades</p>
+        <img src="./static/images/fig2_shares.png" alt="Share of open-loop scenes that CoT improves or degrades, for each VLA.">
+        <p class="figure-caption">
+          Share of NAVSIM, nuScenes, and PhysicalAI-AV scenes where CoT changes the score (up to half of scenes).
+          Gains and losses nearly cancel in benchmark averages.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Why CoT degrades driving</h2>
+        <p class="section-takeaway">
+          Two failure modes, and two fixes that need each other.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            Across the three open-loop benchmarks, CoT degrades driving twice as often when the action it states
+            does not match the human driver. Even when the CoT matches the driver, however, the trajectory can
+            ignore it or carry it out poorly, accounting for half of all degraded scenes.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="columns is-centered is-vcentered">
+      <div class="column is-three-fifths">
+        <div class="reason">
+          <div class="reason-cause">
+            <span class="reason-number">1</span>
+            <div>
+              <b>The CoT can be wrong.</b>
+              When the car should keep going, CoT can state a pass of the car ahead,
+              and the trajectory with CoT collides.
+            </div>
+          </div>
+          <a class="reason-fix is-clutch" href="#clutch">Clutch <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="reason">
+          <div class="reason-cause">
+            <span class="reason-number">2</span>
+            <div>
+              <b>The trajectory can fail to listen to a right CoT.</b>
+              CoT can state a pass of a stopped car while the trajectory still stops behind it.
+            </div>
+          </div>
+          <a class="reason-fix is-cf" href="#counterfactual">Counterfactual supervision <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="content has-text-justified">
+          <p>
+            The two fixes need each other: Clutch can only choose between the trajectories the VLA generates,
+            and a trajectory that follows its CoT also follows a wrong one.
+          </p>
+        </div>
+      </div>
+      <div class="column">
+        <h3 class="title is-5 has-text-centered chart-title">Driver-matching CoTs</h3>
+        <p class="has-text-centered chart-subtitle">Half of degraded scenes still have a right CoT</p>
+        <img src="./static/images/fig3_driver_matching.png" alt="Share of scenes with a driver-matching CoT, among the scenes that CoT improves and degrades.">
+        <p class="figure-caption">
+          Share of open-loop scenes where CoT states the human driver's action (All: the six VLAs together).
+          Because half of degraded scenes still have a driver-matching CoT, the CoT text alone cannot tell whether
+          CoT will improve driving.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<section class="section" id="clutch">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3"><span class="clutch">Clutch</span>: choosing after seeing what the car would do</h2>
+        <p class="section-takeaway">
+          Prior routers decide before the CoT is written. Clutch decides after both trajectories are generated.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            Like a car's clutch, Clutch engages reasoning only when it pays off. Prior routers decide from the
+            scene alone, so they must guess both what the CoT will state and whether the trajectory will carry it
+            out. Clutch reads both candidate trajectories and the frozen VLA's activations, so it guesses neither.
+          </p>
+        </div>
+        <img src="./static/images/fig4ab_clutch.png" alt="Clutch at inference and in training.">
+        <p class="figure-caption">
+          <b>Clutch at inference and in training.</b> (a) The frozen VLA generates one trajectory with CoT and one
+          without, and Clutch uses both trajectories and the VLA's activations as input to select which one to
+          execute. (b) We train Clutch with an outcome-weighted binary cross-entropy loss weighted by the score
+          gap <i>w</i>, so crashes count far more than near ties.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            Clutch averages small MLPs with the same architecture for every VLA. Decoding both trajectories in
+            parallel adds only 3% wall-clock time over always using CoT for Alpamayo 1.5.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Over 7&times; the gain of a prior router</h3>
+        <p class="section-takeaway">
+          Seeing both trajectories accounts for most of the gain.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            We compare Clutch against BLUE, a prior router that decides before the CoT is written, and remove one
+            part of Clutch at a time. Removing the trajectories cuts Clutch's share of the best possible gain 3&times;, because the
+            trajectories show what the car would actually do with and without CoT.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered is-vcentered">
+      <div class="column is-two-fifths">
+        <img src="./static/images/fig1b_routing_gain.png" alt="Mean routing gain of a prior router and of Clutch, as a percentage of the oracle gain.">
+        <p class="figure-caption">
+          <b>Routing gain as a share of the oracle gain.</b> The oracle picks the higher-scoring trajectory in
+          every scene. Clutch achieves over 7&times; the gain of BLUE.
+        </p>
+      </div>
+      <div class="column">
+        <div class="table-container">
+          <table class="table is-narrow is-fullwidth paper-table">
+            <thead>
+              <tr>
+                <th>Router</th><th>Activations</th><th class="ctr">Trajectories</th>
+                <th class="ctr wrap">Outcome-weighted loss</th><th class="num">Wins &uarr;</th><th class="num">Oracle share &uarr;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ours-row"><td><b>Clutch</b></td><td>before + after CoT</td><td class="ctr">&#10003;</td><td class="ctr">&#10003;</td><td class="num"><b>24/24</b></td><td class="num"><b>37.3%</b></td></tr>
+              <tr><td></td><td>before + after CoT</td><td class="ctr">&times;</td><td class="ctr">&#10003;</td><td class="num"><b>24/24</b></td><td class="num">12.2%</td></tr>
+              <tr><td></td><td>before CoT</td><td class="ctr">&times;</td><td class="ctr">&#10003;</td><td class="num"><b>24/24</b></td><td class="num">11.3%</td></tr>
+              <tr><td>BLUE</td><td>before CoT</td><td class="ctr">&times;</td><td class="ctr">&times;</td><td class="num">17/24</td><td class="num">4.9%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="figure-caption">
+          <b>Router ablation.</b> Removing one part at a time across 24 open-loop evaluations (8 VLAs &times; 3
+          benchmarks). Wins: evaluations where the router outperforms both Never CoT and Always CoT. Oracle share:
+          mean fraction of the oracle gain achieved.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Clutch matches or outperforms always and never using CoT for every VLA</h3>
+        <p class="section-takeaway">
+          One router design, trained on the frozen VLA, works for all eight VLAs on all four benchmarks.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            Read each row across columns: Clutch matches or outperforms Never CoT, Always CoT, and BLUE on all
+            four benchmarks, cutting open-loop trajectory error by up to 24% on nuScenes and PhysicalAI-AV. In the
+            top three rows, pairing Clutch with our counterfactual training (Alpamayo-CF) reaches the highest
+            Alpamayo score on HUGSIM, NAVSIM, and nuScenes.
+          </p>
+        </div>
+        <div class="table-container">
+          <table class="table is-narrow is-fullwidth paper-table results-table">
+            <thead>
+              <tr>
+                <th rowspan="3">VLA</th>
+                <th colspan="4" class="group">Closed loop</th>
+                <th colspan="12" class="group">Open loop</th>
+              </tr>
+              <tr>
+                <th colspan="4" class="group">HUGSIM (HD-Score &uarr;)</th>
+                <th colspan="4" class="group">NAVSIM (PDMS &uarr;)</th>
+                <th colspan="4" class="group">nuScenes (L2, m &darr;)</th>
+                <th colspan="4" class="group">PhysicalAI-AV (ADE, m &darr;)</th>
+              </tr>
+              <tr>
+                <th class="num">Never</th><th class="num">Always</th><th class="num">BLUE</th><th class="num clutch-col">Clutch</th>
+                <th class="num">Never</th><th class="num">Always</th><th class="num">BLUE</th><th class="num clutch-col">Clutch</th>
+                <th class="num">Never</th><th class="num">Always</th><th class="num">BLUE</th><th class="num clutch-col">Clutch</th>
+                <th class="num">Never</th><th class="num">Always</th><th class="num">BLUE</th><th class="num clutch-col">Clutch</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alpamayo 1.5</td>
+                <td class="num">0.234</td><td class="num">0.238</td><td class="num">0.238</td><td class="num clutch-col"><b>0.259</b></td>
+                <td class="num">60.34</td><td class="num">61.96</td><td class="num">61.96</td><td class="num clutch-col"><b>68.77</b></td>
+                <td class="num">1.93</td><td class="num">1.87</td><td class="num">1.87</td><td class="num clutch-col"><b>1.41</b></td>
+                <td class="num">1.11</td><td class="num">1.12</td><td class="num">1.11</td><td class="num clutch-col"><b>0.99</b></td>
+              </tr>
+              <tr>
+                <td>Alpamayo-SFT</td>
+                <td class="num">0.361</td><td class="num">0.363</td><td class="num">0.361</td><td class="num clutch-col"><b>0.368</b></td>
+                <td class="num">87.34</td><td class="num">87.17</td><td class="num">87.48</td><td class="num clutch-col"><b>90.06</b></td>
+                <td class="num">0.70</td><td class="num">0.70</td><td class="num">0.69</td><td class="num clutch-col"><b>0.65</b></td>
+                <td class="num">1.24</td><td class="num">1.29</td><td class="num">1.24</td><td class="num clutch-col"><b>1.12</b></td>
+              </tr>
+              <tr class="group-end">
+                <td class="cf"><b>Alpamayo-CF</b> (ours)</td>
+                <td class="num">0.341</td><td class="num">0.330</td><td class="num">0.360</td><td class="num clutch-col"><span class="full-cell">0.369</span></td>
+                <td class="num">90.35</td><td class="num">89.90</td><td class="num">90.35</td><td class="num clutch-col"><span class="full-cell">91.46</span></td>
+                <td class="num">0.67</td><td class="num">0.68</td><td class="num">0.67</td><td class="num clutch-col"><span class="full-cell">0.63</span></td>
+                <td class="num">1.14</td><td class="num">1.34</td><td class="num">1.14</td><td class="num clutch-col"><span class="full-cell">1.09</span></td>
+              </tr>
+              <tr>
+                <td>Qwen-Drive</td>
+                <td class="num">0.313</td><td class="num">0.319</td><td class="num">0.323</td><td class="num clutch-col"><b>0.324</b></td>
+                <td class="num">87.83</td><td class="num"><b>87.99</b></td><td class="num"><b>87.99</b></td><td class="num clutch-col"><b>87.99</b></td>
+                <td class="num">0.94</td><td class="num">0.93</td><td class="num"><b>0.92</b></td><td class="num clutch-col"><b>0.92</b></td>
+                <td class="num">1.37</td><td class="num">1.36</td><td class="num">1.36</td><td class="num clutch-col"><b>1.35</b></td>
+              </tr>
+              <tr>
+                <td>Qwen-Drive-RL</td>
+                <td class="num">0.268</td><td class="num">0.272</td><td class="num"><i>0.272</i></td><td class="num clutch-col"><b>0.284</b></td>
+                <td class="num">90.35</td><td class="num"><b>90.62</b></td><td class="num"><b>90.62</b></td><td class="num clutch-col"><b>90.62</b></td>
+                <td class="num">0.96</td><td class="num">0.95</td><td class="num">0.94</td><td class="num clutch-col"><b>0.93</b></td>
+                <td class="num">1.45</td><td class="num">1.43</td><td class="num">1.43</td><td class="num clutch-col"><b>1.42</b></td>
+              </tr>
+              <tr>
+                <td>OneVL</td>
+                <td class="num">0.307</td><td class="num">0.296</td><td class="num"><i>0.304</i></td><td class="num clutch-col"><b>0.319</b></td>
+                <td class="num">85.42</td><td class="num">88.23</td><td class="num">88.23</td><td class="num clutch-col"><b>88.64</b></td>
+                <td class="num">0.86</td><td class="num">0.97</td><td class="num">0.86</td><td class="num clutch-col"><b>0.84</b></td>
+                <td class="num">3.31</td><td class="num">3.57</td><td class="num">3.29</td><td class="num clutch-col"><b>3.08</b></td>
+              </tr>
+              <tr>
+                <td>OpenREAD</td>
+                <td class="num">0.300</td><td class="num">0.296</td><td class="num">0.301</td><td class="num clutch-col"><b>0.305</b></td>
+                <td class="num">63.75</td><td class="num">63.34</td><td class="num">63.75</td><td class="num clutch-col"><b>64.61</b></td>
+                <td class="num">0.76</td><td class="num"><b>0.75</b></td><td class="num"><b>0.75</b></td><td class="num clutch-col"><b>0.75</b></td>
+                <td class="num">1.29</td><td class="num">1.29</td><td class="num"><b>1.28</b></td><td class="num clutch-col"><b>1.28</b></td>
+              </tr>
+              <tr>
+                <td>dVLM-AD</td>
+                <td class="num">0.068</td><td class="num">0.069</td><td class="num"><i>0.068</i></td><td class="num clutch-col"><b>0.070</b></td>
+                <td class="num">52.61</td><td class="num">46.86</td><td class="num">52.80</td><td class="num clutch-col"><b>54.27</b></td>
+                <td class="num">1.85</td><td class="num">1.99</td><td class="num">1.82</td><td class="num clutch-col"><b>1.68</b></td>
+                <td class="num">4.40</td><td class="num">4.78</td><td class="num">4.26</td><td class="num clutch-col"><b>4.01</b></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="figure-caption">
+          <b>Closed-loop and open-loop results.</b> Never and Always: CoT always off or always on. BLUE: prior
+          router deciding before CoT. Alpamayo-CF (ours): Alpamayo 1.5 finetuned with counterfactual supervision.
+          Alpamayo-SFT: control finetuned on the same data without counterfactual examples. Bold: best in each row
+          and benchmark. Italics: offline estimates.
+          <span class="chip clutch-col" aria-hidden="true">&nbsp;&nbsp;&nbsp;</span> Clutch.
+          <span class="full-cell" aria-hidden="true">&nbsp;&nbsp;&nbsp;</span> Full method: Alpamayo-CF with Clutch.
+        </p>
+      </div>
+    </div>
+
+    <!-- Dropped from main flow (backup slide / supplement Fig. S4): closed-loop HUGSIM videos above already show Clutch selecting safe trajectories live.
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <img src="./static/images/figS4_routing_examples.png" alt="Three NAVSIM scenes in which one trajectory fails and Clutch selects the safe one.">
+        <p class="figure-caption">
+          <b>Routing examples on NAVSIM (Alpamayo 1.5).</b> In each scene, one trajectory collides or leaves the
+          road (red cross) and the other stays safe. Clutch selects the safe trajectory (check mark). White boxes
+          show other road users, and dashed boxes show the car where the failing trajectory collides or leaves
+          the road.
+        </p>
+      </div>
+    </div>
+    -->
+
+  </div>
+</section>
+
+
+<section class="section" id="counterfactual">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3"><span class="cf">Counterfactual supervision</span>: making the trajectory listen</h2>
+        <p class="section-takeaway">
+          Clutch can only choose between the trajectories the VLA generates. Counterfactual supervision trains the decoder to follow its CoT.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            When we give Alpamayo 1.5 a CoT that states a different action than the human driver took, its
+            trajectory ignores the CoT over four times out of five. Because the car should keep going in most
+            training scenes, the high-dimensional sensor input predicts the driver's trajectory on its own, and
+            the decoder learns to ignore the CoT. Counterfactual supervision removes this shortcut by pairing a
+            scene with a <i>counterfactual CoT</i> and a safe recorded trajectory from another clip that carries
+            that action out.
+          </p>
+        </div>
+        <img src="./static/images/fig4c_counterfactual.png" alt="Counterfactual supervision: before it, the trajectory can ignore the CoT, and after it, the trajectory follows the CoT.">
+        <p class="figure-caption">
+          <b>Counterfactual supervision.</b> We pair a scene with a counterfactual CoT (a different action than
+          the human driver took) and a safe recorded trajectory that carries it out. Before counterfactual
+          supervision (Alpamayo 1.5), the trajectory can ignore the CoT. After it (Alpamayo-CF), the trajectory
+          follows the CoT.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            A counterfactual CoT is not a wrong CoT: it states an action the human driver did not take, and its
+            trajectory is safe in the scene. To build <span class="cf"><b>Alpamayo-CF</b></span>, we keep
+            Alpamayo 1.5's VLM frozen, finetune only the trajectory decoder on original, no-CoT, and counterfactual
+            examples, and then train the decoder with reinforcement learning to reduce error and collisions.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Told to turn, Alpamayo 1.5 goes straight and Alpamayo-CF turns</h3>
+        <p class="section-takeaway">
+          Replacing the CoT changes the trajectory only after counterfactual supervision.
+        </p>
+        <img src="./static/images/fig5_cf_qual.png" alt="Given a CoT that says to turn, Alpamayo 1.5 goes straight and Alpamayo-CF turns.">
+        <p class="figure-caption">
+          In both scenes, we replace the VLA's CoT with a counterfactual CoT that says to turn. Alpamayo 1.5
+          (dashed black) ignores it and drives straight with the recorded driver (tan), while Alpamayo-CF (purple)
+          turns as the CoT states. Insets: bird's-eye view.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Counterfactual supervision makes CoT pay off</h3>
+        <p class="section-takeaway">
+          Alpamayo-CF follows counterfactual CoTs nearly 3&times; as often, and CoT improves its must-act driving over 4&times; more.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            Finetuning on the same data without counterfactual examples (Alpamayo-SFT) raises CoT following far
+            less. When a CoT that is not driver-matching is replaced with a driver-matching one on NAVSIM, only Alpamayo-CF gains
+            sharply in PDMS, and in closed-loop HUGSIM CoT raises its must-act HD-Score over 4&times; more than
+            for Alpamayo 1.5 or Alpamayo-SFT.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered is-vcentered">
+      <div class="column is-half">
+        <img src="./static/images/fig6_follows_selects.png" alt="How often the trajectory follows its CoT, and how often Clutch selects CoT.">
+        <p class="figure-caption">
+          <b>CoT following (a) and Clutch selection (b).</b> (a) Share of PhysicalAI-AV trajectories that follow a
+          counterfactual CoT (CF CoT) and the VLA's own CoT (Own CoT). (b) Share of open-loop scenes where Clutch
+          selects CoT, among scenes that CoT improves versus degrades.
+        </p>
+      </div>
+      <div class="column">
+        <div class="table-container">
+          <table class="table is-narrow is-fullwidth paper-table">
+            <thead>
+              <tr>
+                <th>VLA</th>
+                <th class="num">Follows CF CoT (%) &uarr;</th>
+                <th class="num">&Delta;PDMS &uarr;</th>
+                <th class="num">Must-act gain &uarr;</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Alpamayo 1.5</td><td class="num">15.1</td><td class="num cb">&minus;0.16</td><td class="num cg">+0.008</td></tr>
+              <tr><td>Alpamayo-SFT</td><td class="num">24.8</td><td class="num cg">+0.31</td><td class="num cg">+0.010</td></tr>
+              <tr><td class="cf">Alpamayo-CF</td><td class="num"><b>44.5</b></td><td class="num cg"><b>+1.41</b></td><td class="num cg"><b>+0.045</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="figure-caption">
+          <b>Counterfactual supervision results.</b> Follows CF CoT: share of PhysicalAI-AV trajectories following
+          a counterfactual CoT. &Delta;PDMS: NAVSIM gain when replacing a CoT that is not driver-matching with a driver-matching
+          one. Must-act gain: closed-loop HUGSIM HD-Score change from never to always using CoT when the car must act.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<section class="section" id="together">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">The two parts need each other</h2>
+        <p class="section-takeaway">
+          Alpamayo-CF with Clutch outperforms both fixed policies whether the car must act or should keep going.
+        </p>
+        <div class="content has-text-justified">
+          <p>
+            A trajectory that follows its CoT also follows a wrong one, so always using CoT still degrades
+            Alpamayo-CF when the car should keep going. Without counterfactual supervision, Clutch outperforms
+            always and never using CoT for Alpamayo 1.5 and Alpamayo-SFT only in keep-going scenes. With both
+            parts together, our full method (Alpamayo-CF with Clutch) outperforms both fixed policies in both
+            situations.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="table-container">
+          <table class="table is-narrow is-fullwidth paper-table">
+            <thead>
+              <tr>
+                <th rowspan="2">HD-Score &uarr;</th>
+                <th colspan="3" class="group">Must act</th>
+                <th colspan="3" class="group">Keep going</th>
+              </tr>
+              <tr>
+                <th class="num">Never</th><th class="num">Always</th><th class="num clutch-col">Clutch</th>
+                <th class="num">Never</th><th class="num">Always</th><th class="num clutch-col">Clutch</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="group-end"><td>Mean over eight VLAs</td><td class="num">0.189</td><td class="num">0.208</td><td class="num clutch-col"><b>0.213</b></td><td class="num">0.291</td><td class="num">0.280</td><td class="num clutch-col"><b>0.299</b></td></tr>
+              <tr><td>Alpamayo 1.5</td><td class="num">0.189</td><td class="num"><b>0.197</b></td><td class="num clutch-col">0.175</td><td class="num">0.254</td><td class="num">0.257</td><td class="num clutch-col"><b>0.290</b></td></tr>
+              <tr><td>Alpamayo-SFT</td><td class="num">0.288</td><td class="num"><b>0.298</b></td><td class="num clutch-col">0.285</td><td class="num">0.376</td><td class="num">0.381</td><td class="num clutch-col"><b>0.392</b></td></tr>
+              <tr><td class="cf">Alpamayo-CF</td><td class="num">0.241</td><td class="num">0.285</td><td class="num clutch-col"><b>0.305</b></td><td class="num">0.373</td><td class="num">0.331</td><td class="num clutch-col"><b>0.382</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="figure-caption">
+          <b>Closed-loop HUGSIM HD-Score by situation.</b> Bold: best of Never, Always, and Clutch in each situation.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">The full method in one drive</h3>
+        <p class="section-takeaway">
+          Both fixed policies collide. Alpamayo-CF with Clutch completes the route.
+        </p>
+        <video class="inview figure-video" controls muted loop playsinline preload="metadata"
+               poster="./static/images/poster_clutch_08_full_method.jpg">
+          <source src="./static/videos/clutch_08_full_method.mp4" type="video/mp4">
+        </video>
+        <p class="figure-caption">
+          A sedan is stopped in the lane in closed-loop HUGSIM. Never CoT and Always CoT both collide with it,
+          while Alpamayo-CF with Clutch switches between the two trajectories and completes the route.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered subbeat">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Takeaways</h3>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="takeaway-card is-finding">
+          <p class="takeaway-stat">6 of 6 VLAs</p>
+          <p>CoT improves every released VLA when the car must act, and degrades driving for most VLAs when the car should keep going.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="takeaway-card is-clutch">
+          <p class="takeaway-stat">Over 7&times;</p>
+          <p>Clutch turns CoT on only when it pays off, achieving over 7&times; the routing gain of a prior router.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="takeaway-card is-cf">
+          <p class="takeaway-stat">Nearly 3&times;</p>
+          <p>Counterfactual supervision makes the trajectory follow its CoT nearly 3&times; as often, raising must-act CoT gain over 4&times;.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@misc{yeung2026reasoning,
+  title  = {Reasoning by Consequence: Selective Chain-of-Thought for Driving VLAs},
+  author = {Yeung, Jacob and Zhang, Wenyuan and Chang, Nadine and Tarr, Michael J. and
+            Ramanan, Deva and Alvarez, Jose M. and Wang, Pichao and Chen, Ke},
+  year   = {2026},
+}</code></pre>
+  </div>
+</section>
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="https://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            It borrows the source code of the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>
+            project page.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

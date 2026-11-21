@@ -1,0 +1,515 @@
+/* Based on the Nerfies project page (https://github.com/nerfies/nerfies.github.io). */
+
+:root {
+  /* One color per concept, as in the paper's figures. */
+  --with-cot: #0072B2;
+  --with-cot-text: #004F7C;
+  --without-cot: #E69F00;
+  --without-cot-text: #8A5F00;
+  --cf: #7B3294;
+  --clutch: #76B900;
+  --clutch-text: #3F6300;
+  --clutch-tint: #EEF7DC;
+  --clutch-fill: #CFE79A;
+  --improves: #D3EFE0;
+  --degrades: #F8D0D0;
+  --ink: #1E1E1E;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Noto Sans', sans-serif;
+  color: var(--ink);
+}
+
+.footer .icon-link {
+  font-size: 25px;
+  color: #000;
+}
+
+.link-block a,
+.link-block button {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.navbar-item {
+  font-family: 'Google Sans', sans-serif;
+}
+
+.teaser .hero-body {
+  padding-top: 0;
+  padding-bottom: 3rem;
+}
+
+.teaser {
+  font-family: 'Google Sans', sans-serif;
+}
+
+/* The hero clip has white margins above and below its panels: show rows 104 to 980 of its 1080. */
+.teaser-crop {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1920 / 876;
+}
+
+.teaser-crop video {
+  position: absolute;
+  left: 0;
+  top: -11.87%;
+  width: 100%;
+}
+
+.teaser .subtitle {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.publication-title {
+  font-family: 'Google Sans', sans-serif;
+}
+
+.publication-authors {
+  font-family: 'Google Sans', sans-serif;
+}
+
+.publication-authors a {
+  color: hsl(204, 86%, 53%) !important;
+}
+
+.publication-authors a:hover {
+  text-decoration: underline;
+}
+
+.author-block {
+  display: inline-block;
+}
+
+.title {
+  font-family: 'Google Sans', sans-serif;
+}
+
+/* Named concepts. */
+.clutch {
+  color: var(--clutch-text);
+  font-weight: bold;
+}
+
+.cf {
+  color: var(--cf);
+}
+
+.with-cot {
+  color: var(--with-cot-text);
+  font-weight: bold;
+}
+
+.without-cot {
+  color: var(--without-cot-text);
+  font-weight: bold;
+}
+
+/* Figures, videos and captions. */
+.section img,
+.figure-video {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.figure-video {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.figure-caption {
+  font-size: 0.9rem;
+  color: #4a4a4a;
+  margin-top: 0.6rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.45;
+}
+
+.section .columns + .columns {
+  margin-top: 1rem;
+}
+
+.section {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Video carousel: one drive at a time. */
+.results-carousel {
+  overflow: hidden;
+}
+
+.results-carousel .item {
+  margin: 5px;
+  overflow: hidden;
+  border: 1px solid #bbb;
+  border-radius: 10px;
+  padding: 0;
+  background: #fff;
+}
+
+.results-carousel video {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.results-carousel .item-caption {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  padding: 0.6rem 1rem 0.8rem;
+  text-align: left;
+}
+
+#drives .subtitle {
+  margin-bottom: 1rem;
+}
+
+#drives .figure-caption {
+  margin-top: 0.8rem;
+  margin-bottom: 0;
+}
+
+/* Page dots sit below the slide, not on top of its caption. The carousel script wraps the slides in `.slider`. */
+#drives .slider {
+  padding-bottom: 2rem;
+}
+
+#results-carousel .slider-pagination {
+  padding: 0.4rem 1rem;
+}
+
+#results-carousel .slider-page {
+  background: #b5b5b5;
+  box-shadow: none;
+}
+
+#results-carousel .slider-page.is-active {
+  background: var(--clutch);
+}
+
+.tag.is-act,
+.tag.is-keep {
+  font-weight: bold;
+  margin-right: 0.4rem;
+  color: #fff;
+}
+
+.tag.is-act {
+  background: var(--with-cot);
+}
+
+.tag.is-keep {
+  background: var(--without-cot-text);
+}
+
+/* The two situations. */
+.situation {
+  height: 100%;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  border-left: 6px solid;
+  background: #f7f7f7;
+}
+
+.situation .title {
+  margin-bottom: 0.4rem;
+}
+
+.situation.is-act {
+  border-color: var(--with-cot);
+}
+
+.situation.is-keep {
+  border-color: var(--without-cot);
+}
+
+/* The two reasons and their fixes. */
+.reason {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.reason-cause {
+  flex: 1;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+}
+
+.reason-number {
+  flex: none;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.8rem;
+}
+
+.reason-fix {
+  flex: none;
+  width: 11.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+  border-radius: 10px;
+  padding: 0.6rem;
+  font-weight: bold;
+  border: 2px solid;
+}
+
+.reason-fix.is-clutch {
+  color: var(--clutch-text);
+  background: var(--clutch-tint);
+  border-color: var(--clutch);
+}
+
+.reason-fix.is-cf {
+  color: var(--cf);
+  background: #F3EAF7;
+  border-color: var(--cf);
+}
+
+.reason-fix:hover {
+  filter: brightness(0.96);
+}
+
+/* Tables, styled after the paper's. */
+.paper-table {
+  font-size: 0.85rem;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 0 !important;
+  background: transparent;
+}
+
+.paper-table th,
+.paper-table td {
+  border: none !important;
+  white-space: nowrap;
+  vertical-align: middle !important;
+}
+
+.paper-table thead tr:last-child th {
+  border-bottom: 1px solid var(--ink) !important;
+}
+
+.paper-table thead th {
+  font-weight: 600;
+}
+
+.paper-table th.group {
+  text-align: center;
+  box-shadow: inset 0 -1px 0 #999;
+}
+
+.paper-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.paper-table .ctr {
+  text-align: center;
+}
+
+.paper-table th.wrap {
+  white-space: normal;
+  min-width: 6.5rem;
+}
+
+/* A wide table scrolls inside its column instead of widening the row. */
+.column {
+  min-width: 0;
+}
+
+.paper-table tfoot td {
+  border-top: 1px solid var(--ink) !important;
+  font-weight: normal;
+}
+
+.paper-table tr.group-end td {
+  border-bottom: 1px solid #999 !important;
+}
+
+.paper-table .cg,
+.chip.cg {
+  background: var(--improves);
+}
+
+.paper-table .cb,
+.chip.cb {
+  background: var(--degrades);
+}
+
+.paper-table .clutch-col,
+.chip.clutch-col {
+  background: var(--clutch-tint);
+}
+
+.paper-table tr.ours-row td {
+  background: var(--clutch-tint);
+}
+
+.full-cell {
+  display: inline-block;
+  background: var(--clutch-fill);
+  border: 1.5px solid var(--clutch);
+  padding: 0 0.25rem;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0 0.35rem;
+  border-radius: 3px;
+}
+
+.results-table {
+  font-size: 0.74rem;
+}
+
+.results-table th,
+.results-table td {
+  padding: 0.3em 0.4em !important;
+}
+
+.results-table thead tr:first-child th:first-child,
+.results-table tbody td:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+/* White gap after each benchmark's Clutch column, drawn inside the cell so that the table rules stay whole. */
+.results-table td:nth-child(5),
+.results-table td:nth-child(9),
+.results-table td:nth-child(13),
+.results-table thead tr:last-child th:nth-child(4),
+.results-table thead tr:last-child th:nth-child(8),
+.results-table thead tr:last-child th:nth-child(12) {
+  box-shadow: inset -6px 0 0 #fff;
+  padding-right: calc(0.4em + 6px) !important;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+@media screen and (max-width: 768px) {
+  .reason {
+    flex-direction: column;
+  }
+
+  .reason-fix {
+    width: 100%;
+  }
+
+  .publication-title {
+    font-size: 1.8rem !important;
+  }
+
+  .content.has-text-justified {
+    text-align: left !important;
+  }
+
+  #results-carousel .slider-navigation-previous,
+  #results-carousel .slider-navigation-next {
+    top: 32%;
+  }
+
+  .section-takeaway {
+    font-size: 1.02rem;
+  }
+}
+
+.chart-title {
+  margin-bottom: 0.2rem !important;
+}
+
+.chart-subtitle {
+  color: var(--clutch-text);
+  font-family: 'Google Sans', sans-serif;
+  font-size: 0.98rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-takeaway {
+  color: var(--clutch-text);
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.12rem;
+  font-weight: 500;
+  margin-top: -0.9rem;
+  margin-bottom: 1.1rem;
+  line-height: 1.35;
+}
+
+.subbeat {
+  margin-top: 2.25rem;
+}
+
+.subbeat .title {
+  margin-bottom: 1.1rem;
+}
+
+.takeaway-card {
+  height: 100%;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  border-top: 4px solid;
+  background: #f7f7f7;
+}
+
+.takeaway-card.is-finding {
+  border-color: var(--with-cot);
+}
+
+.takeaway-card.is-clutch {
+  border-color: var(--clutch);
+  background: var(--clutch-tint);
+}
+
+.takeaway-card.is-cf {
+  border-color: var(--cf);
+  background: #F7F2FA;
+}
+
+.takeaway-stat {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
+}
+
+.takeaway-card.is-finding .takeaway-stat {
+  color: var(--with-cot-text);
+}
+
+.takeaway-card.is-clutch .takeaway-stat {
+  color: var(--clutch-text);
+}
+
+.takeaway-card.is-cf .takeaway-stat {
+  color: var(--cf);
+}
