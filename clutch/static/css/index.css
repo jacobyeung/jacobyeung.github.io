@@ -13,6 +13,8 @@
   --clutch-fill: #CFE79A;
   --improves: #D3EFE0;
   --degrades: #F8D0D0;
+  --act: #1E7B3A;
+  --keep: #B0192C;
   --ink: #1E1E1E;
 }
 
@@ -205,11 +207,11 @@ body {
 }
 
 .tag.is-act {
-  background: var(--with-cot);
+  background: var(--act);
 }
 
 .tag.is-keep {
-  background: var(--without-cot-text);
+  background: var(--keep);
 }
 
 /* The two situations. */
@@ -226,11 +228,21 @@ body {
 }
 
 .situation.is-act {
-  border-color: var(--with-cot);
+  border-color: var(--act);
+}
+
+.situation.is-act .title,
+.act-text {
+  color: var(--act);
 }
 
 .situation.is-keep {
-  border-color: var(--without-cot);
+  border-color: var(--keep);
+}
+
+.situation.is-keep .title,
+.keep-text {
+  color: var(--keep);
 }
 
 /* The two reasons and their fixes. */
@@ -376,6 +388,10 @@ body {
   padding: 0 0.25rem;
   font-weight: bold;
   line-height: 1.3;
+}
+
+.full-cell b {
+  font-weight: inherit;
 }
 
 .chip {
