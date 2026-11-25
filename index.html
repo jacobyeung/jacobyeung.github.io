@@ -10,6 +10,18 @@
 
   <link rel="stylesheet" type="text/css" href="stylesheet.css">
   <link rel="icon" type="image/png" href="images/icon.jpg">
+  <style>
+    .split-punches { margin: 6px 0 0 18px; padding: 0; line-height: 1.45; }
+    .split-punches li { margin: 2px 0; }
+    .split-nw { white-space: nowrap; }
+    @media (max-width: 640px) {
+      table.split-table, table.split-table > tbody, tr.split-row, tr.split-row > td {
+        display: block; width: 100% !important; box-sizing: border-box;
+      }
+      tr.split-row > td { padding: 8px 16px !important; }
+      tr.split-row img.thumbnail { width: 100% !important; max-width: 100% !important; height: auto !important; }
+    }
+  </style>
 </head>
 
 <body>
@@ -50,6 +62,37 @@
       <td style="padding:20px;width:100%;vertical-align:middle">
         <heading>Research</heading>
 
+      </td>
+    </tr>
+    </tbody></table>
+    <table class="split-table" style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+    <tr class="split-row">
+      <td style="padding:20px;width:40%;vertical-align:middle">
+        <a href="https://split-spatial.github.io/"><img src="images/split_teaser.jpg" width="1200" height="520" style="width:100%;height:auto;" class="thumbnail" alt="SPLIT sample video spatial question and 3-D floor view comparing Base VLM and SPLIT"></a>
+      </td>
+      <td style="padding:20px;width:60%;vertical-align:middle">
+        <a href="https://split-spatial.github.io/" id="split">
+          <papertitle>Perception, Not Reasoning, Limits Video Spatial Understanding</papertitle>
+        </a>
+        <br>
+        <strong>Jacob Yeung</strong>,
+        <a href="https://mohit1997.github.io/">Mohit Goyal</a>,
+        <a href="https://www.linkedin.com/in/fdubost">Florian Dubost</a>,
+        <a href="https://www.linkedin.com/in/garyvondran">Gary L. Vondran Jr.</a>,
+        <a href="https://federicotombari.github.io/">Federico Tombari</a>,
+        <a href="https://www.cs.cmu.edu/~deva/">Deva Ramanan</a>,
+        <a href="https://sites.google.com/andrew.cmu.edu/tarrlab/people/michael-j-tarr">Michael J. Tarr</a>
+        <br>
+        <a href="https://split-spatial.github.io/">Website</a> /
+        <a href="https://split-spatial.github.io/static/paper.pdf">Paper</a> /
+        <a href="https://split-spatial.github.io/static/poster.pdf">Poster</a>
+        <p style="text-align:left;margin-bottom:4px;">SPLIT is a <span class="split-nw">training-free</span> harness that builds one metric <span class="split-nw">3-D</span> reconstruction of a video and gives a base VLM tools to query it. It addresses four failure modes (<span class="split-nw">Base VLM &rarr; SPLIT</span>):</p>
+        <ul class="split-punches">
+          <li><strong>Unseen viewpoints:</strong> <span class="split-nw">43.6% &rarr; 76.1%</span> (<span class="split-nw">SpaceCast-Bench</span>)</li>
+          <li><strong>Long videos:</strong> <span class="split-nw">53.2% &rarr; 87.0%</span> (<span class="split-nw">HD-EPIC</span>)</li>
+          <li><strong>Never <span class="split-nw">co-visible</span>:</strong> <span class="split-nw">60.7% &rarr; 89.2%</span> (VSIBench)</li>
+          <li><strong>Metric measurements:</strong> <span class="split-nw">1.40&nbsp;m &rarr; 0.46&nbsp;m</span> median error</li>
+        </ul>
       </td>
     </tr>
     </tbody></table>
